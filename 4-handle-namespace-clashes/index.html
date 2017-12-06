@@ -80,30 +80,28 @@ by Mauricio Allende (https://mallendeo.com/)
 <div id="⚛️"></div>
 
 <script type="text/babel">
+// PROPS NAMESPACE CLASH MEANT THAT WE GAVE TOGGLE CONTEXT ITS OWN NAMESPACE IN 
+// THE WITHTOGGLE HOC
+// Also check out nested destructuring!
+
 const TOGGLE_CONTEXT = '__toggle__'
-function ToggleOn({children}, context) {
-  const {on} = context[TOGGLE_CONTEXT]
+const ToggleOn = withToggle(({children, toggle: { on }}) => {
   return on ? children : null
-}
-ToggleOn.contextTypes = {
-  [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
-}
-function ToggleOff({children}, context) {
-  const {on} = context[TOGGLE_CONTEXT]
+})
+const ToggleOff = withToggle(({children, toggle: { on }}) => {
   return on ? null : children
-}
-ToggleOff.contextTypes = {
-  [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
-}
-function ToggleButton(props, context) {
-  const {on, toggle} = context[TOGGLE_CONTEXT]
-  return (
-    <Switch on={on} onClick={toggle} {...props} />
-  )
-}
-ToggleButton.contextTypes = {
-  [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
-}
+})
+const ToggleButton = withToggle(
+  ({toggle: {on, toggle}, ...props}) => {
+    return (
+      <Switch
+        on={on}
+        onClick={toggle}
+        {...props}
+      />
+    )
+  },
+)
 class Toggle extends React.Component {
   static On = ToggleOn
   static Off = ToggleOff
@@ -132,6 +130,38 @@ class Toggle extends React.Component {
   }
 }
 
+function withToggle(Component) {
+  function Wrapper(props, context) {
+    const toggleContext = context[TOGGLE_CONTEXT]
+    return (
+      // instead of {...toggleContext} we need to give it its own namespace.
+      // Makes it necessary to refactor components accessing the toggleContext
+      <Component {...props} toggle={toggleContext} />
+    )
+  }
+  Wrapper.contextTypes = {
+    [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
+  }
+  return Wrapper
+}
+
+const MyEventComponent = withToggle(
+  // We can use toggle.on now toggle has own namespace in props
+  // This is to clash of name 'on'
+  ({ toggle, on, event }) => {
+    const props = {[event]: on};
+    return toggle.on ? (
+      <button {...props}>The {event} event</button>
+    ) : null
+  }
+)
+// NESTED DESTRUCTURING!
+const MyToggle = withToggle(({toggle: { on, toggle}}) => (
+  <button onClick={toggle}>
+    {on ? 'on' : 'off'}
+  </button>
+))
+
 function App() {
   return (
     <Toggle
@@ -139,9 +169,15 @@ function App() {
     >
       <Toggle.On>The button is on</Toggle.On>
       <Toggle.Off>The button is off</Toggle.Off>
-      <div>
-        <Toggle.Button />
-      </div>
+      <Toggle.Button />
+      <hr />
+      <MyToggle />
+      <hr />
+      <MyEventComponent
+        event={'onClick'}
+        // note that 'on' will clash with the 'on' set in getChildContext in Toggle
+        on={e => alert(e.type)}
+      />
     </Toggle>
   )
 }

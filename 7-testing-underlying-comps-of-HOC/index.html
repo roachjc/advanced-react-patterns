@@ -142,6 +142,7 @@ function withToggle(Component) {
   }
   Wrapper.displayName = `withToggle(${Component.displayName ||
     Component.name})`
+  // Create a property on the HOC wrapper that holds a reference to the original Component it wraps
   Wrapper.WrappedComponent = Component
   return Wrapper
 }
@@ -158,6 +159,9 @@ function test() {
   document.body.appendChild(div)
   const toggle = () => (toggle.called = true)
   ReactDOM.render(
+    // Referencing just MyToggleWrapper won't work because we are not providing toggleContext which is required
+    // So we can just reference the original wrapped component and test that in isolation instead
+    // This is the same as testing <MyToggle /> directly, but this way we don't have to export / import the wrapped underlying component
     <MyToggleWrapper.WrappedComponent
       toggle={{on: true, toggle}}
     />,

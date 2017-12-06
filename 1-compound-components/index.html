@@ -79,45 +79,65 @@ by Mauricio Allende (https://mallendeo.com/)
 <div id="⚛️"></div>
 
 <script type="text/babel">
+
+function ToggleOn({ on, children }) {
+  return on ? children : null;
+}
+function ToggleOff({ on, children }) {
+  return on ? null : children;
+}
+function ToggleButton({ on, toggle, ...props }) {
+  return <Switch on={on} onClick={toggle} {...props} />
+}
+
 class Toggle extends React.Component {
+  // Add external functions as static methods to be called as Toggle.On / .Off etc
+  static On = ToggleOn;
+  static Off = ToggleOff;
+  static Button = ToggleButton;
+  // This empty function stops the app breaking if no onToggle is passed from parent.
   static defaultProps = {onToggle: () => {}}
+  // Set initial state
   state = {on: false}
+  
+  // toggle state.on and call onToggle when complete
   toggle = () =>
     this.setState(
       ({on}) => ({on: !on}),
-      () => this.props.onToggle(this.state.on),
+      () => {
+        this.props.onToggle(this.state.on)
+      },
     )
+  
   render() {
-    return this.props.render({
-      on: this.state.on,
-      toggle: this.toggle,
-    })
+    // Map over all children, clone and assign props (on, toggle).
+    // This is a React specific map function for component children.
+    // Note that this will only create clones for children and will not work
+    // if target children (eg Toggle.On) are nested in elements (eg a div)
+    // -> SEE NEXT FILE FOR SOLUTION
+    const children = React.Children.map(
+      this.props.children,
+      child =>
+        React.cloneElement(child, {
+          on: this.state.on,
+          toggle: this.toggle,
+        })
+    )
+    const {on} = this.state
+    return <div>{children}</div>
   }
-}
-
-function MyToggle({on, toggle}) {
-  return (
-    <button onClick={toggle}>
-      {on ? 'on' : 'off'}
-    </button>
-  )
 }
 
 function App() {
   return (
+    // COMPOUND COMPONENTS - children components share implicit state
     <Toggle
       onToggle={on => console.log('toggle', on)}
-      render={({on, toggle}) => (
-        <div>
-          {on
-            ? 'The button is on'
-            : 'The button is off'}
-          <Switch on={on} onClick={toggle} />
-          <hr />
-          <MyToggle on={on} toggle={toggle} />
-        </div>
-      )}
-    />
+    >
+      <Toggle.On>The button is on</Toggle.On>
+      <Toggle.Off>The button is off</Toggle.Off>
+      <Toggle.Button />
+    </Toggle>
   )
 }
 
