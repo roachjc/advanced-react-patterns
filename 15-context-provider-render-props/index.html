@@ -80,6 +80,10 @@ by Mauricio Allende (https://mallendeo.com/)
 <div id="⚛️"></div>
 
 <script type="text/babel">
+// PROBLEM: We have a bigger app now and need to pass the Toggle 'on' state around all over the place.
+// How can we acheive this without 'prop-drilling' and having loads of references to 'toggle' and 'toggle.on' everywhere?
+// PROVIDER PATTERN using the CONTEXT API
+
 const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
 
@@ -132,13 +136,16 @@ class Toggle extends React.Component {
   }
 }
 
+// The ToggleProvider allows us to render Toggle and set context via static Renderer
 class ToggleProvider extends React.Component {
   static contextName = '__toggle__'
+  // This is responsible for setting the context
   static Renderer = class extends React.Component {
     static childContextTypes = {
       [ToggleProvider.contextName]:
         PropTypes.object.isRequired,
     }
+    // This is a react built in method for setting the context!
     getChildContext() {
       return {
         [ToggleProvider.contextName]: this.props
@@ -146,15 +153,16 @@ class ToggleProvider extends React.Component {
       }
     }
     render() {
+      // returning children is to say it doesn't do anything
+      // ** Apart from set the context as a side effect **
       return this.props.children
     }
   }
   render() {
-    const {
-      children,
-      ...remainingProps
-    } = this.props
+    const { children, ...remainingProps } = this.props
     return (
+      // Here we render the Toggle which in turn will render ToggleProvider.Renderer while setting context
+      // Renderer in turn just renders its children, which are these children, which are the children of ToggleProvider
       <Toggle
         {...remainingProps}
         render={toggle => (
@@ -168,16 +176,21 @@ class ToggleProvider extends React.Component {
   }
 }
 
+// This is the function that will connect the component to the context and avoid having to pass around
+// props too much. 
 function ConnectedToggle(props, context) {
   return props.render(
     context[ToggleProvider.contextName],
   )
 }
+// This tells react that it needs context
 ConnectedToggle.contextTypes = {
   [ToggleProvider.contextName]:
     PropTypes.object.isRequired,
 }
 
+// Now in a component that needs toggle itself, not just to pass it on
+// we can access toggle via the render method in ConnectedToggle!
 function Nav() {
   return (
     <ConnectedToggle
@@ -325,6 +338,7 @@ function Post() {
 
 function App() {
   return (
+    // The ToggleProvider renders the actual Toggle component
     <ToggleProvider>
       <div>
         <Header />

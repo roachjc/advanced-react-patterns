@@ -115,15 +115,13 @@ function App() {
   return (
     <Toggle
       onToggle={on => console.log('toggle', on)}
-      // Here we define the render prop
+      // Here we define the render prop method
       // we set it to receive the state it needs to function --
-      // --> is the switch on && the onClick event handler 'toggle'
+      // --> is the switch on? && the onClick event handler 'toggle'
       render={({on, toggle}) => (
         <div>
           <Switch on={on} onClick={toggle} />
-          {on
-            ? 'The button is on'
-            : 'The button is off'}
+          {on ? 'The button is on' : 'The button is off'}
           <hr />
           <MyToggle on={on} toggle={toggle} />
         </div>

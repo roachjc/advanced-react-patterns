@@ -81,6 +81,10 @@ by Mauricio Allende (https://mallendeo.com/)
 <script type="text/babel">
 const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
+
+// The idea here is to share common props with both the switch and the button
+// using 'aria-expanded' as an example
+// This is common when rendiring elements requiring common props via render props
 class Toggle extends React.Component {
   static defaultProps = {onToggle: () => {}}
   state = {on: false}
@@ -93,6 +97,7 @@ class Toggle extends React.Component {
     return this.props.render({
       on: this.state.on,
       toggle: this.toggle,
+      // we add in togglerProps as a prop COLLECTION!
       togglerProps: {
         'aria-expanded': this.state.on,
         onClick: this.toggle,
@@ -107,9 +112,21 @@ function App() {
       onToggle={on => console.log('toggle', on)}
       render={({on, toggle, togglerProps}) => (
         <div>
+         {/*Note that both <Switch /> and <button /> need 'aria-expanded' and 'onClick'
+          * so we set those in the parent Toggle component as togglerProps to be passed via render prop*/}
           <Switch on={on} {...togglerProps} />
           <hr />
-          <button {...togglerProps}>
+          {/* How would it be possible to add another onClick handler in
+          this button given togglerProps already contains one? 
+          They need to be composed together*/}
+          <button
+            onClick={() => {
+              alert('hi');
+              {/* This kind of sucks because it requires users to know about the action in Toggle
+              What if we changed to onKeyDown? See next lesson*/}
+              togglerProps.onClick()
+            }}
+          >
             {on ? 'on' : 'off'}
           </button>
         </div>

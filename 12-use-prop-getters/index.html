@@ -79,8 +79,16 @@ by Mauricio Allende (https://mallendeo.com/)
 <div id="⚛️"></div>
 
 <script type="text/babel">
+// PROBLEM: How do we ensure that the user of a component is able to add any event handlers and/or
+// common attributes and not override any that already exist on the component they are using.
+// USE PROP-GETTERS!
+
+// Helper function takes any number of functions
+// returns a function that calls each of them with
+// whatever args are passed to the returned function when called
 const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
+
 class Toggle extends React.Component {
   static defaultProps = {onToggle: () => {}}
   state = {on: false}
@@ -89,12 +97,18 @@ class Toggle extends React.Component {
       ({on}) => ({on: !on}),
       () => this.props.onToggle(this.state.on),
     )
+  // We create this new function retrieve toggler props and if necessary merge
+  // any shared namespace functions (eg here onClick)
   getTogglerProps = (
+    // empty object in case nothing passed
     {onClick, ...props} = {},
   ) => {
     return {
       'aria-expanded': this.state.on,
+      // Compose any event handlers / common props that might need to be used by the user also
+      // Also think about composing classNames and IDs
       onClick: compose(onClick, this.toggle),
+      // Here we spread any additional props the user passes in
       ...props,
     }
   }
@@ -102,6 +116,7 @@ class Toggle extends React.Component {
     return this.props.render({
       on: this.state.on,
       toggle: this.toggle,
+      // Change the togglerProps object to new getTogglerProps
       getTogglerProps: this.getTogglerProps,
     })
   }
@@ -120,6 +135,7 @@ function App() {
           <hr />
           <button
             {...getTogglerProps({
+              // Here we can add any additional props the user of Toggle wishes to add to the button
               onClick: () => alert('hi'),
               id: 'hi',
             })}

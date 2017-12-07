@@ -78,8 +78,12 @@ by Mauricio Allende (https://mallendeo.com/)
 <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
 
 <div id="⚛️"></div>
-
 <script type="text/babel">
+// PROBLEM We want to allow users to CONTROL the 'on' state of Toggle if they choose
+// so we need to know whether we should get the 'on' from props or from state.
+// i.e. is the user of Toggle controlling the 'on' state via props 
+// or is Toggle controlling the 'on' state?
+
 const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
 
@@ -91,19 +95,24 @@ class Toggle extends React.Component {
   }
   initialState = {on: this.props.defaultOn}
   state = this.initialState
+
   reset = () => {
+    // if controlled we have to call the handlers passed as props
     if (this.isOnControlled()) {
       this.props.onReset(!this.props.on)
     } else {
+      // Otherwise we take care of it in Toggle state
       this.setState(this.initialState, () =>
         this.props.onReset(this.state.on),
       )
     }
   }
   toggle = () => {
+    // if controlled we have to call the handlers passed as props
     if (this.isOnControlled()) {
       this.props.onToggle(!this.props.on)
     } else {
+      // Otherwise we take care of it in Toggle state
       this.setState(
         ({on}) => ({on: !on}),
         () => this.props.onToggle(this.state.on),
@@ -117,9 +126,11 @@ class Toggle extends React.Component {
     'aria-expanded': this.state.on,
     ...props,
   })
+  // Here we just determine whether or not the user using the 'on' prop
   isOnControlled() {
     return this.props.on !== undefined
   }
+
   render() {
     return this.props.render({
       on: this.isOnControlled()
@@ -133,6 +144,8 @@ class Toggle extends React.Component {
 }
 
 class App extends React.Component {
+  // Because the user has decided to control the 'on' state
+  // you have to create state in the user component (App) and sort from there.
   initialState = {timesClicked: 0, on: false}
   state = this.initialState
   handleToggle = () => {
@@ -146,10 +159,12 @@ class App extends React.Component {
   }
 
   render() {
+    // So now we get on state from in the user's (App) component
     const {timesClicked, on} = this.state
     return (
       <Toggle
         on={on}
+        {/* And we need to take care of the event handlers here too */}
         onToggle={this.handleToggle}
         onReset={this.handleReset}
         render={toggle => (

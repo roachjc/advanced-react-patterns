@@ -80,16 +80,22 @@ by Mauricio Allende (https://mallendeo.com/)
 <div id="⚛️"></div>
 
 <script type="text/babel">
+// PROBLEM: How do we set a accomodate a default state by the user
+// and an api to reset to the default state
+
 const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
 
 class Toggle extends React.Component {
   static defaultProps = {
+    // add new props to default props
     defaultOn: false,
     onToggle: () => {},
     onReset: () => {},
   }
+  // save initial state using prop
   initialState = {on: this.props.defaultOn}
+  // refer back to initial state for both instantiating state and resetting state
   state = this.initialState
   reset = () =>
     this.setState(this.initialState, () =>
@@ -120,7 +126,9 @@ class Toggle extends React.Component {
 function App() {
   return (
     <Toggle
+      // create prop defaultOn to set the default state of toggle
       defaultOn={true}
+
       onToggle={on => console.log('toggle', on)}
       onReset={on => console.log('reset', on)}
       render={toggle => (
@@ -131,6 +139,7 @@ function App() {
             })}
           />
           <hr />
+          {/* button returns toggle state to whatever was set in defaultOn */}
           <button onClick={() => toggle.reset()}>
             Reset
           </button>
