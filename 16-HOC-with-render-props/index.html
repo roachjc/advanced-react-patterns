@@ -81,6 +81,9 @@ by Mauricio Allende (https://mallendeo.com/)
 <div id="⚛️"></div>
 
 <script type="text/babel">
+// PROBLEM someone insists on having a HOC available. How can we combine the two.
+// Pretty simple now it's all set up.
+
 const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
 
@@ -179,6 +182,8 @@ ConnectedToggle.contextTypes = {
     PropTypes.object.isRequired,
 }
 
+// This just implements ConnectedToggle as an HOC, which in turn wraps the component
+// See 03-08 for implementation details on HOCs
 function withToggle(Component) {
   function Wrapper(props, context) {
     const {innerRef, ...remainingProps} = props

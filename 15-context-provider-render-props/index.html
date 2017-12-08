@@ -83,6 +83,7 @@ by Mauricio Allende (https://mallendeo.com/)
 // PROBLEM: We have a bigger app now and need to pass the Toggle 'on' state around all over the place.
 // How can we acheive this without 'prop-drilling' and having loads of references to 'toggle' and 'toggle.on' everywhere?
 // PROVIDER PATTERN using the CONTEXT API
+// This can communicate state anywhere inside of the tree it wraps
 
 const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
